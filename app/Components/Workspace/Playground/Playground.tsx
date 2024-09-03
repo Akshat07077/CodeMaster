@@ -3,6 +3,7 @@ import PlayNav from "./PlayNav";
 import Split from "react-split";
 import Editor from "@monaco-editor/react";
 import EditorFooter from "./EditorFooter";
+import { Button } from "@/components/ui/button";
 
 type Props = {};
 
@@ -16,7 +17,7 @@ const Playground = (props: Props) => {
   return (
     <div className="flex flex-col relative">
       <PlayNav />
-      <div className="border-[#dadada7e] rounded-xl border-l-2 border-t-2">
+      <div className="border-[#dadada7e] bg-[#1E1E1E] rounded-xl border-l-2 border-t-2">
         <div className="p-1 h-10">
           <label htmlFor="language-select" className="mr-4 "></label>
           <select
@@ -41,11 +42,21 @@ const Playground = (props: Props) => {
         >
           <div className="w-full border-[#dadada7e] border-b-2 border-r-2  overflow-auto">
             <Editor
-              height="100%"
+              className=""
+              height="88%"
+              defaultValue="const a=1;"
               defaultLanguage="javascript"
               language={language}
               theme="vs-dark"
             />
+            <div className="overflow-hidden gap-5  flex-row-reverse flex mr-10">
+              <Button className="rounded-xl h-9 w-20 hover:bg-green-700 bg-green-600 p-1 text-white">
+                Submit
+              </Button>
+              <Button className="rounded-xl h-9 w-16 hover:bg-slate-400 bg-slate-500 p-1 text-white">
+                Run
+              </Button>
+            </div>
           </div>
           <div className="w-full px-5 overflow-auto">
             {/* testcase heading */}
