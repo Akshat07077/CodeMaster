@@ -33,11 +33,12 @@ const Header = (props: Props) => {
           {/* <div className="bg-neutral-700 p-2 rounded-xl ">
             <Code2 height={18} />
           </div> */}
+          <div className="preferenceBtn-tooltip preferenceBtn">Full Screen</div>
         </div>
       </div>
       <div className="flex items-center gap-5">
         <UserCircle />
-        <Button className="bg-green-600 h-8 hover:scale-105">Premium</Button>
+        <Button className="bg-green-600 h-8 hover:scale-105">Log Out</Button>
       </div>
     </div>
   );
