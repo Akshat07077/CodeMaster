@@ -59,7 +59,7 @@ const Timer: React.FC<TimerProps> = () => {
   return (
     <div className="">
       {showTimer ? (
-        <div className="flex gap-2 mt-2 items-center h-8 rounded-lg bg-red-700 p-2 justify-center">
+        <div className="flex gap-2 mt-2 items-center h-8 rounded-lg  p-2 justify-center">
           {isPaused ? (
             <PlayIcon
               className="hover:scale-110 cursor-pointer"

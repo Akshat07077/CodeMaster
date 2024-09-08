@@ -7,7 +7,6 @@ function page() {
   return (
     <div className="bg-[#1c1c1c]">
       <MouseTrailer />
-
       <Navbar />
       <Home />
     </div>

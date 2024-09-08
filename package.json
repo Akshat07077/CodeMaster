@@ -22,6 +22,7 @@
     "@uiw/codemirror-theme-copilot": "^4.23.0",
     "@uiw/codemirror-theme-vscode": "^4.23.0",
     "@uiw/react-codemirror": "^4.23.0",
+    "assert": "^2.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "firebase": "^10.13.1",

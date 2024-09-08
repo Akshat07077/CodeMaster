@@ -22,7 +22,7 @@ const PreferenceNav: React.FC<PreferenceNavProps> = ({}) => {
         </button>
       </div>
 
-      <div className="flex items-center m-2">
+      <div className="flex items-center text-white m-2">
         <button className="preferenceBtn group">
           <div className="h-4 w-4 text-dark-gray-6 font-bold text-lg">
             <AiOutlineSetting />
