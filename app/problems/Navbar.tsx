@@ -1,3 +1,4 @@
+import { SignOutButton } from "@clerk/nextjs";
 import React from "react";
 
 const Navbar = () => {
@@ -59,9 +60,9 @@ const Navbar = () => {
           </a> */}
           <a
             href="#"
-            className="bg-green-500 mb-5 text-gray-900 shadow-lg shadow-green-600 py-1 px-4 rounded-md hover:scale-95 hidden md:block"
+            className="bg-orange-700 mt-1 mb-5 text-gray-900 rounded-xl shadow-green-600 py-1 px-4  hover:scale-95 hidden md:block"
           >
-            Sign In
+            <SignOutButton/>
           </a>
         </div>
 

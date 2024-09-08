@@ -10,7 +10,8 @@ import MouseTrailer from "./Home/MouseTrail";
 function page() {
   return (
     <>
-      <MouseTrailer />
+    
+      {/* <MouseTrailer /> */}
       <Navbar />
       <Mid />
       {/* /* <ChakraProvider theme={theme}> */} <Demo />

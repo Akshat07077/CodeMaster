@@ -4,11 +4,13 @@ import { MenuIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { SignOutButton, useAuth } from "@clerk/nextjs";
 
 type Props = {};
 
 function Navbar({}: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const SignedIn=useAuth()
 
   return (
     <nav className="bg-black items-center border-b-2 border-gray-600 h-20">
@@ -54,16 +56,9 @@ function Navbar({}: Props) {
         </div>
 
         {/* Mobile Menu Icon */}
-        <div className="md:hidden mr-6">
-          <MenuIcon
-            size={28}
-            className="text-white cursor-pointer"
-            onClick={() => setIsOpen(!isOpen)}
-          />
-        </div>
 
         {/* Mobile Dropdown Menu */}
-        {isOpen && (
+        {/* {isOpen && (
           <div className="absolute top-16 left-0 w-full bg-black flex flex-col items-center font-mono md:hidden">
             <Link href="/" className="py-2 text-white text-lg">
               Home
@@ -84,15 +79,28 @@ function Navbar({}: Props) {
               Contact Us
             </Link>
           </div>
-        )}
+        )} */}
 
         {/* Desktop Right-Side Menu */}
         <div className="hidden md:flex gap-4 font-mono mr-5">
-          <Link href="/login">
-            <Button className="ml-5 text-[2vh] btn-gradient hover:bg-transparent border-l-2 border-r-2 border-green-500 hover:scale-105">
-              Log In
+          
+          {SignedIn && (
+            <Button
+              className="ml-5 text-[2vh] btn-gradient hover:bg-transparent border-l-2 border-r-2 hover:text-white border-green-500 hover:scale-105"
+              variant="ghost"
+            >
+              <a href="/problems">Login</a>
             </Button>
-          </Link>
+          )}
+          {!SignedIn && (
+            <Button
+              className="bg-transparent border border-green-500 hover:text-white text-white hover:scale-105 rounded-3xl w-[15vh]"
+              variant="ghost"
+            >
+              <SignOutButton />
+            </Button>
+          )}
+          
           <Link href="/contact">
             <Button className="ml-5 text-[2vh] btn-gradient hover:bg-transparent border-l-2 border-r-2 border-green-500 hover:scale-105">
               Contact Us
