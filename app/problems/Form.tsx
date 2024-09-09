@@ -1,11 +1,11 @@
 'use client';
 import React, { useState } from "react";
 import { firestore } from "../firebase/firebase"; // Adjust the import path as needed
-import { doc, setDoc } from "firebase/firestore"; 
+import { collection, addDoc } from "firebase/firestore"; 
 
 function ProblemForm() {
   const [inputs, setInputs] = useState({
-    id: '',
+    id:'',
     title: '',
     difficulty: '',
     category: '',
@@ -19,7 +19,8 @@ function ProblemForm() {
     e.preventDefault();
     
     // Ensure all fields are filled
-    if (!inputs.id || !inputs.title || !inputs.category || !inputs.link || !inputs.order || !inputs.difficulty) {
+    const {id, title, difficulty, category, link, order } = inputs;
+    if (!title || !id || !difficulty || !category || !link || !order) {
       alert("Please fill out all fields.");
       return;
     }
@@ -31,17 +32,17 @@ function ProblemForm() {
         ...inputs,
         likes: 0,  // Initial default value
         dislikes: 0,  // Initial default value
-        order: Number(inputs.order),  // Convert order to number
+        order: Number(order),  // Ensure order is a number
       };
 
-      // Save the new problem to Firestore
-      await setDoc(doc(firestore, 'problems', inputs.id), newProblem);
+      // Save the new problem to Firestore, automatically generating a unique ID
+      await addDoc(collection(firestore, 'problems'), newProblem);
 
       alert("Problem successfully saved!");
 
       // Reset form inputs after submission
       setInputs({
-        id: '',
+        id:'',
         title: '',
         difficulty: '',
         category: '',
@@ -51,7 +52,7 @@ function ProblemForm() {
 
     } catch (error) {
       console.error("Error saving problem: ", error);
-      alert("Failed to save the problem.");
+      alert("Failed to save the problem. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -67,6 +68,15 @@ function ProblemForm() {
   return (
     <div className="p-4">
       <form className="flex flex-col gap-2 w-64" onSubmit={handleSubmit}>
+      <input 
+          onChange={handleInputChange}
+          value={inputs.title} 
+          type="text" 
+          placeholder="id" 
+          name="title" 
+          required 
+          className="border p-2"
+        />
         <input 
           onChange={handleInputChange}
           value={inputs.title} 
@@ -74,6 +84,7 @@ function ProblemForm() {
           placeholder="Title" 
           name="title" 
           required 
+          className="border p-2"
         />
         <input 
           onChange={handleInputChange}
@@ -82,6 +93,7 @@ function ProblemForm() {
           placeholder="Category" 
           name="category" 
           required 
+          className="border p-2"
         />
         <input 
           onChange={handleInputChange}
@@ -90,6 +102,7 @@ function ProblemForm() {
           placeholder="Link" 
           name="link" 
           required 
+          className="border p-2"
         />
         <input 
           onChange={handleInputChange}
@@ -98,6 +111,7 @@ function ProblemForm() {
           placeholder="Order" 
           name="order" 
           required 
+          className="border p-2"
         />
         <input 
           onChange={handleInputChange}
@@ -106,18 +120,11 @@ function ProblemForm() {
           placeholder="Difficulty" 
           name="difficulty" 
           required 
-        />
-        <input 
-          onChange={handleInputChange}
-          value={inputs.id} 
-          type="text" 
-          placeholder="ID" 
-          name="id" 
-          required 
+          className="border p-2"
         />
 
         <button 
-          className="bg-white py-2" 
+          className="bg-blue-500 text-white py-2 mt-2 rounded" 
           type="submit" 
           disabled={loading}
         >

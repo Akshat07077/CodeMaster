@@ -25,7 +25,7 @@ export default function SignInPage() {
                 {" "}
                 <BotIcon />
               </span>{" "}
-              Join Monk-Ai Now
+              Join CodeMaster Now
               <div className="line h-2 w-28 ml-2 bg-violet-700"></div>
             </h1>
             {/* <div>
@@ -64,7 +64,7 @@ export default function SignInPage() {
                   className="h-28 rounded object-fill"
                 />
                 <h1 className="mt-4 text-[7vw] md:text-xl font-medium tracking-tight text-neutral-950">
-                  Sign in to MONK-AI
+                  Sign in to CodeMaster
                 </h1>
               </header>
               <Clerk.GlobalError className="block text-sm text-red-600" />
