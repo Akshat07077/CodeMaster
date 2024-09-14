@@ -1,86 +1,129 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { Howl } from "howler";
 import PlayNav from "./PlayNav";
 import Split from "react-split";
 import Editor, { Monaco } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Problem } from "../../Problems/types/Problem";
-import { twoSum } from "../../Problems/two-sum";
+// import successSoundFile from "success.mp3"; // Assuming you have the sound file here
 
-type Props = { problem: Problem };
+type Props = {
+  problem: Problem;
+  setSuccess: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
-const Playground: React.FC<Props> = ({ problem }) => {
-  const [language, setLanguage] = useState("javascript");
-  const [activeTest, setActiveTest] = useState<number>(0);
-  const [output, setOutput] = useState<string>("");
+const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
   const [editorInstance, setEditorInstance] = useState<any>(null); // Store the editor instance
-  const [outputVisible, setOutputVisible] = useState<boolean>(false); // Toggle for output visibility
+  const [language, setLanguage] = useState<string>("javascript");
+  const [output, setOutput] = useState<string>("");
+  const [activeTest, setActiveTest] = useState<number>(0);
+  const [outputVisible, setOutputVisible] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [userCode, setUserCode] = useState<string>("");
+
+  // Create a ref to the audio element
+  const successSoundRef = useRef<HTMLAudioElement>(null);
+  const successSound = new Howl({
+    src: '/success.mp3',
+    volume: 0.5, // You can adjust the volume
+  });
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
   };
 
-  // Capture the editor instance when the editor mounts
   const handleEditorDidMount = (editor: any, monaco: Monaco) => {
     setEditorInstance(editor);
   };
 
-  // Function to handle the Run button click
-  const handleRun = () => {
-    if (!editorInstance) return;
-
-    const userCode = editorInstance.getValue(); // Get the code from the editor
-
-    if (language === "javascript") {
-      try {
-        const fn = new Function(`return ${userCode}`)();
-        const testCase = problem.examples[activeTest];
-        const result = fn(testCase.inputText);
-        setOutput(`Result: ${JSON.stringify(result)}`);
-      } catch (error) {
-        setOutput(`Error: ${error}`);
-      }
-    } else if (language === "python") {
-      // Handle Python execution
-      // fetch("/api/python-execute", { method: "POST", body: userCode })
-      //   .then((res) => res.json())
-      //   .then((result) => setOutput(result))
-      //   .catch((err) => setOutput(`Error: ${err.message}`));
+  const getUserCode = (): string => {
+    if (editorInstance) {
+      return editorInstance.getValue();
     }
-    setOutputVisible(true); // Show the output section
+    return "";
   };
 
   // Function to handle the Submit button click
   const handleSubmit = () => {
+    try {
+      setError(null);
+      const code = getUserCode(); // Get the code from the editor
+      const fn = new Function("return " + code)(); // Create a function from user code
+      const result = problem.handlerFunction(fn);
+
+      if (result) {
+        setOutput("All test cases passed!");
+        setSuccess(true);
+        successSound.play();
+
+        // Play the success sound when success is true
+        if (successSoundRef.current) {
+          successSoundRef.current.play();
+        }
+
+        // Confetti will trigger for 6 seconds and then reset success
+        setTimeout(() => {
+          setSuccess(false);
+        }, 5000);
+      } else {
+        setOutput("Test cases failed.");
+      }
+    } catch (err) {
+      setError((err as Error).message);
+      setOutput(`Error: ${(err as Error).message}`);
+    }
+  };
+  const handleRun = () => {
     if (!editorInstance) return;
-
+  
     const userCode = editorInstance.getValue(); // Get the code from the editor
-
+    const testCase = problem.examples[activeTest]; // Get the active test case
+  
     if (language === "javascript") {
       try {
-        const fn = new Function(`return ${userCode}`)();
-        let allTestsPassed = true;
-
-        problem.examples.forEach((testCase) => {
-          const result = fn(testCase.inputText);
-          if (JSON.stringify(result) !== JSON.stringify(testCase.outputText)) {
-            allTestsPassed = false;
-          }
-        });
-
-        setOutput(allTestsPassed ? "All test cases passed!" : "Some test cases failed.");
+        const fn = new Function(`return ${userCode}`)(); // Create a function from the user's code
+  
+        // Handle string or array inputs
+        let result;
+        if (Array.isArray(testCase.inputText)) {
+          result = fn(...testCase.inputText); // Spread if inputText is an array
+        } else {
+          result = fn(testCase.inputText); // Pass directly if it's a string
+        }
+  
+        const expected = testCase.outputText;
+  
+        if (JSON.stringify(result) === JSON.stringify(expected)) {
+          setOutput(`Success! Output: ${JSON.stringify(result)}`);
+        } else {
+          setOutput(`Failed! Expected: ${JSON.stringify(expected)}, but got: ${JSON.stringify(result)}`);
+        }
       } catch (error) {
-        setOutput(`Error: ${error}`);
+        setOutput(`Error: ${error as string}`);
       }
     } else if (language === "python") {
-      // Handle Python testing
-      // fetch("/api/python-test", { method: "POST", body: userCode })
-      //   .then((res) => res.json())
-      //   .then((result) => setOutput(result))
-      //   .catch((err) => setOutput(`Error: ${err.message}`));
+      fetch("/api/python-execute", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code: userCode, testCase: testCase.inputText }),
+      })
+        .then((res) => res.json())
+        .then((result) => {
+          const expected = testCase.outputText;
+          if (result.output.trim() === expected.trim()) {
+            setOutput(`Success! Output: ${result.output}`);
+          } else {
+            setOutput(`Failed! Expected: ${expected}, but got: ${result.output}`);
+          }
+        })
+        .catch((err) => setOutput(`Error: ${err.message}`));
     }
     setOutputVisible(true); // Show the output section
   };
-
+  
+  
   // Function to toggle output visibility
   const toggleOutputVisibility = () => {
     setOutputVisible(!outputVisible);
@@ -106,15 +149,10 @@ const Playground: React.FC<Props> = ({ problem }) => {
           </select>
         </div>
 
-        <Split
-          className="h-[90vh]"
-          direction="vertical"
-          sizes={[48, 52]}
-          minSize={60}
-        >
+        {/* Editor and Buttons */}
+        <Split className="h-[90vh]" direction="vertical" sizes={[48, 52]} minSize={60}>
           <div className="w-full border-[#dadada7e] border-b-2 border-r-2 overflow-auto">
             <Editor
-              className=""
               height="88%"
               defaultValue={problem.starterCode}
               defaultLanguage={language}
@@ -139,12 +177,12 @@ const Playground: React.FC<Props> = ({ problem }) => {
           </div>
 
           <div className="w-full px-5 overflow-auto">
-            <div className="font-semibold my-1">
+          <div className="font-semibold my-1">
               <p className="text-xs font-medium text-white">Test Cases:</p>
               <div className="flex">
                 {problem.examples.map((example, index) => (
                   <div
-                    key={example.id}
+                    key={index} // Update key to index
                     className="mr-2 items-start mt-2"
                     onClick={() => setActiveTest(index)}
                   >
@@ -175,7 +213,7 @@ const Playground: React.FC<Props> = ({ problem }) => {
           </div>
         </Split>
 
-        {/* Output section visible on running code */}
+        {/* Output Section */}
         {outputVisible && (
           <div className="absolute top-0 right-0 w-64 p-4 bg-black text-white border border-gray-500 rounded-xl">
             <div className="flex justify-between items-center">
@@ -192,6 +230,9 @@ const Playground: React.FC<Props> = ({ problem }) => {
             </div>
           </div>
         )}
+
+        {/* Success Sound */}
+        <audio src='success.mp3' />
       </div>
     </div>
   );

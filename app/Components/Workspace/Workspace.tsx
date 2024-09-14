@@ -25,7 +25,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
       <Description problem={problem} />
       <div className="bg-[#262626]">
 			<div className='bg-dark-fill-2'>
-				<Playground problem={problem}  />
+				<Playground setSuccess={setSuccess} problem={problem}  />
 				{success && <Confetti gravity={0.3} tweenDuration={4000} width={width - 20} height={height - 10} />}
 			</div>
       </div>
