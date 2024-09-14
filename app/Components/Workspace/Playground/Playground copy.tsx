@@ -4,17 +4,16 @@ import Split from "react-split";
 import Editor, { Monaco } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Problem } from "../../Problems/types/Problem";
+import { twoSum } from "../../Problems/two-sum";
 
 type Props = { problem: Problem };
 
 const Playground: React.FC<Props> = ({ problem }) => {
-  const [editorInstance, setEditorInstance] = useState<any>(null); // Store the editor instance
-	const [language, setLanguage] = useState<string>("javascript");
-  const [output, setOutput] = useState<string>("");
+  const [language, setLanguage] = useState("javascript");
   const [activeTest, setActiveTest] = useState<number>(0);
-  const [outputVisible, setOutputVisible] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [userCode, setUserCode] = useState<string>("");
+  const [output, setOutput] = useState<string>("");
+  const [editorInstance, setEditorInstance] = useState<any>(null); // Store the editor instance
+  const [outputVisible, setOutputVisible] = useState<boolean>(false); // Toggle for output visibility
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
@@ -23,12 +22,6 @@ const Playground: React.FC<Props> = ({ problem }) => {
   // Capture the editor instance when the editor mounts
   const handleEditorDidMount = (editor: any, monaco: Monaco) => {
     setEditorInstance(editor);
-  };
-  const getUserCode = (): string => {
-    if (editorInstance) {
-      return editorInstance.getValue();
-    }
-    return '';
   };
 
   // Function to handle the Run button click
@@ -58,23 +51,35 @@ const Playground: React.FC<Props> = ({ problem }) => {
 
   // Function to handle the Submit button click
   const handleSubmit = () => {
-    try {
-      setError(null);
-      const code = getUserCode(); // Get the code from the editor
-      const fn = new Function('return ' + code)(); // Create a function from user code
-      const result = problem.handlerFunction(fn);
+    if (!editorInstance) return;
 
-      if (result) {
-        setOutput("All test cases passed!");
-      } else {
-        setOutput("Test cases failed.");
+    const userCode = editorInstance.getValue(); // Get the code from the editor
+
+    if (language === "javascript") {
+      try {
+        const fn = new Function(`return ${userCode}`)();
+        let allTestsPassed = true;
+
+        problem.examples.forEach((testCase) => {
+          const result = fn(testCase.inputText);
+          if (JSON.stringify(result) !== JSON.stringify(testCase.outputText)) {
+            allTestsPassed = false;
+          }
+        });
+
+        setOutput(allTestsPassed ? "All test cases passed!" : "Some test cases failed.");
+      } catch (error) {
+        setOutput(`Error: ${error}`);
       }
-    } catch (err) {
-      setError((err as Error).message);
-      setOutput(`Error: ${(err as Error).message}`);
+    } else if (language === "python") {
+      // Handle Python testing
+      // fetch("/api/python-test", { method: "POST", body: userCode })
+      //   .then((res) => res.json())
+      //   .then((result) => setOutput(result))
+      //   .catch((err) => setOutput(`Error: ${err.message}`));
     }
+    setOutputVisible(true); // Show the output section
   };
-
 
   // Function to toggle output visibility
   const toggleOutputVisibility = () => {
@@ -139,7 +144,7 @@ const Playground: React.FC<Props> = ({ problem }) => {
               <div className="flex">
                 {problem.examples.map((example, index) => (
                   <div
-                    key={index} // Update key to index
+                    key={example.id}
                     className="mr-2 items-start mt-2"
                     onClick={() => setActiveTest(index)}
                   >

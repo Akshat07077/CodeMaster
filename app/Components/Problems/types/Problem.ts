@@ -4,21 +4,28 @@ export type Example = {
 	outputText: string;
 	explanation?: string;
 	img?: string;
+	target?:number
 };
 
 // local problem data
-export type Problem = {
+export interface Problem {
 	id: string;
 	title: string;
-	difficulty:string;
 	problemStatement: string;
-	examples: Example[];
+	examples: {
+	  id: number;
+	  inputText: string;
+	  outputText: string;
+	  explanation?: string;
+	}[];
 	constraints: string;
-	order: number;
 	starterCode: string;
-	handlerFunction: ((fn: any) => boolean) | string;
+	handlerFunction: (fn: any) => boolean;
+	difficulty: string;
+	order: number;
 	starterFunctionName: string;
-};
+  }
+  
 
 export type DBProblem = {
 	id: string;
