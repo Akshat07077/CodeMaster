@@ -1,11 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Howl } from "howler";
 import PlayNav from "./PlayNav";
 import Split from "react-split";
 import Editor, { Monaco } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Problem } from "../../Problems/types/Problem";
-// import successSoundFile from "success.mp3"; // Assuming you have the sound file here
+import { X } from "lucide-react";  // Icon for the close button
 
 type Props = {
   problem: Problem;
@@ -19,14 +19,18 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
   const [activeTest, setActiveTest] = useState<number>(0);
   const [outputVisible, setOutputVisible] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [userCode, setUserCode] = useState<string>("");
 
-  // Create a ref to the audio element
-  const successSoundRef = useRef<HTMLAudioElement>(null);
+  // Create the success sound with Howl
   const successSound = new Howl({
     src: '/success.mp3',
-    volume: 0.5, // You can adjust the volume
+    volume: 0.5,
   });
+  const regexPatterns: Record<string, RegExp> = {
+    "two-sum": /nums = \[(.*?)\], target = (\d+)/,
+    "jump-game": /nums = \[(.*?)\]/,
+    // Add more patterns for other problems
+  };
+  
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
@@ -37,10 +41,7 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
   };
 
   const getUserCode = (): string => {
-    if (editorInstance) {
-      return editorInstance.getValue();
-    }
-    return "";
+    return editorInstance ? editorInstance.getValue() : "";
   };
 
   // Function to handle the Submit button click
@@ -54,80 +55,79 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
       if (result) {
         setOutput("All test cases passed!");
         setSuccess(true);
-        successSound.play();
+        successSound.play(); // Play the success sound
+        setOutputVisible(true);  // Automatically show the output panel
 
-        // Play the success sound when success is true
-        if (successSoundRef.current) {
-          successSoundRef.current.play();
-        }
-
-        // Confetti will trigger for 6 seconds and then reset success
+        // Confetti will trigger for 5 seconds and then reset success
         setTimeout(() => {
           setSuccess(false);
         }, 5000);
       } else {
         setOutput("Test cases failed.");
+        setOutputVisible(true);  // Automatically show the output panel
       }
     } catch (err) {
       setError((err as Error).message);
       setOutput(`Error: ${(err as Error).message}`);
+      setOutputVisible(true);  // Automatically show the output panel
     }
   };
+
   const handleRun = () => {
     if (!editorInstance) return;
   
     const userCode = editorInstance.getValue(); // Get the code from the editor
-    console.log("User code:", userCode);
+    const pattern = regexPatterns[problem.id]; // Get the regex pattern for the current problem
   
     if (language === "javascript") {
       try {
-        // Create a function from user code
-        const fn = new Function(`return ${userCode}`)();
-        console.log("Function created:", fn);
-  
+        const fn = new Function(`return ${userCode}`)(); // Create a function from user code
         const testCase = problem.examples[activeTest];
-        console.log("Test case:", testCase);
   
-        // Extract inputs from the inputText
-        const inputRegex = /nums = \[(.*?)\], target = (\d+)/;
-        const match = testCase.inputText.match(inputRegex);
+        // Use the correct pattern to extract inputs
+        const match = testCase.inputText.match(pattern);
   
         if (match) {
-          const nums = match[1].split(',').map(Number); // Convert to array of numbers
-          const target = Number(match[2]); // Convert target to number
-          console.log("Extracted inputs:", nums, target);
+          // Process the extracted inputs according to the problem's requirements
+          if (problem.id === "two-sum") {
+            const nums = match[1].split(',').map(Number); // Convert to array of numbers
+            const target = Number(match[2]); // Convert target to number
+            const result = fn(nums, target);
+            const expectedOutput = JSON.parse(testCase.outputText);
   
-          // Run the user's function with extracted inputs
-          const result = fn(nums, target);
-          console.log("Function result:", result);
+            if (JSON.stringify(result) === JSON.stringify(expectedOutput)) {
+              setOutput("Success! Test case passed.");
+            } else {
+              setOutput(`Failed! Expected: ${JSON.stringify(expectedOutput)}, but got: ${JSON.stringify(result)}`);
+            }
+          } else if (problem.id === "jump-game") {
+            const nums = match[1].split(',').map(Number); // Convert to array of numbers
+            const result = fn(nums);
+            const expectedOutput = testCase.outputText === "true";
   
-          // Parse the expected output
-          const expectedOutput = JSON.parse(testCase.outputText);
-          console.log("Expected output:", expectedOutput);
-  
-        
-          // Compare result with expected output
-          if (JSON.stringify(result) === JSON.stringify(expectedOutput)) {
-            console.log('wonnn')
-            setOutput("Success! Test case passed.");
-          } else {
-            setOutput(`Failed! Expected: ${JSON.stringify(expectedOutput)}, but got: ${JSON.stringify(result)}`);
-            console.log('loss')
+            if (result === expectedOutput) {
+              setOutput("Success! Test case passed.");
+            } else {
+              setOutput(`Failed! Expected: ${expectedOutput}, but got: ${result}`);
+            }
           }
+          // Handle other problems here
+  
+          setOutputVisible(true);  // Automatically show the output panel
         } else {
           setOutput("Error: Could not parse the input text.");
+          setOutputVisible(true);  // Automatically show the output panel
         }
       } catch (error) {
         setOutput(`Error: ${error}`);
-        console.error("Error executing the function:", error);
+        setOutputVisible(true);  // Automatically show the output panel
       }
     }
   };
   
-  
-  // Function to toggle output visibility
-  const toggleOutputVisibility = () => {
-    setOutputVisible(!outputVisible);
+
+  const closeOutput = () => {
+    setOutputVisible(false);  // Hide the output panel
   };
 
   return (
@@ -150,7 +150,6 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
           </select>
         </div>
 
-        {/* Editor and Buttons */}
         <Split className="h-[90vh]" direction="vertical" sizes={[48, 52]} minSize={60}>
           <div className="w-full border-[#dadada7e] border-b-2 border-r-2 overflow-auto">
             <Editor
@@ -159,7 +158,7 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
               defaultLanguage={language}
               language={language}
               theme="vs-dark"
-              onMount={handleEditorDidMount} // Mount the editor
+              onMount={handleEditorDidMount}
             />
             <div className="overflow-hidden gap-5 flex-row-reverse flex mr-10">
               <Button
@@ -177,21 +176,20 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
             </div>
           </div>
 
-          <div className="w-full px-5 overflow-auto">
-          <div className="font-semibold my-1">
+          <div className="w-full px-5 overflow-auto relative">
+            <div className="font-semibold my-1">
               <p className="text-xs font-medium text-white">Test Cases:</p>
               <div className="flex">
                 {problem.examples.map((example, index) => (
                   <div
-                    key={index} // Update key to index
+                    key={index}
                     className="mr-2 items-start mt-2"
                     onClick={() => setActiveTest(index)}
                   >
                     <div className="flex flex-wrap items-center p-2 gap-y-4">
                       <div
                         className={`font-medium text-xs bg-gray-500 opacity-85 rounded-xl items-center transition-all focus:outline-none inline-flex bg-dark-fill-3 hover:bg-dark-fill-2 relative px-4 py-1 cursor-pointer whitespace-nowrap
-                        ${activeTest === index ? "text-white" : "text-black"}
-                      `}
+                        ${activeTest === index ? "text-white" : "text-black"}`}
                       >
                         Case {index + 1}
                       </div>
@@ -211,29 +209,22 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
                 </div>
               </div>
             </div>
+
+            {/* Output panel overlay */}
+            {outputVisible && (
+              <div className="absolute inset-0 bg-gray-900 rounded-md mt-2 border border-gray-700 text-white p-4">
+                <button
+                  onClick={closeOutput}
+                  className="absolute top-2 right-2 p-5 text-white hover:text-gray-300"
+                >
+                  <X className="w-5 h-8" /> {/* Cross button */}
+                </button>
+                <h2 className="font-bold mt-2">Output:</h2>
+                <pre>{output}</pre>
+              </div>
+            )}
           </div>
         </Split>
-
-        {/* Output Section */}
-        {outputVisible && (
-          <div className="absolute top-0 right-0 w-64 p-4 bg-black text-white border border-gray-500 rounded-xl">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-bold">Output</span>
-              <button
-                className="text-gray-400 hover:text-white"
-                onClick={toggleOutputVisibility}
-              >
-                &times;
-              </button>
-            </div>
-            <div className="mt-2">
-              <p>{output}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Success Sound */}
-        <audio src='success.mp3' />
       </div>
     </div>
   );
