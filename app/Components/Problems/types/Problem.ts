@@ -17,6 +17,8 @@ export interface Problem {
 	  inputText: string;
 	  outputText: string;
 	  explanation?: string;
+	  img?: string;
+
 	}[];
 	constraints: string;
 	starterCode: string;
@@ -24,6 +26,7 @@ export interface Problem {
 	difficulty: string;
 	order: number;
 	starterFunctionName: string;
+	solution: string
   }
   
 

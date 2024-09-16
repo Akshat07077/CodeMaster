@@ -1,27 +1,41 @@
+'use client'
 import { AiFillLike, AiFillDislike } from "react-icons/ai";
 import { BsCheck2Circle } from "react-icons/bs";
 import { Problem } from "../../Problems/types/Problem";
 import { TiStarOutline } from "react-icons/ti";
+import { useState } from "react";
 
 type ProblemDescriptionProps = {  problem: Problem;};
 
 const ProblemDescription: React.FC<ProblemDescriptionProps> = ({problem}) => {
+  const [viewMode, setViewMode] = useState<'description' | 'solution'>('description');
+
+  // Toggle between description and solution
+  const toggleViewMode = () => {
+    setViewMode((prevMode) => (prevMode === 'description' ? 'solution' : 'description'));
+  };
   return (
     <div className="bg-[#262626]">
       {/* TAB */}
       <div className="flex h-11 w-full items-center pt-2 bg-dark-layer-2 text-white overflow-hidden">
-        <div className={"bg-[#262626]  px-5 py-[10px] text-sm cursor-pointer"}>
+      <div
+          className={`px-5 py-[10px] text-sm cursor-pointer ${
+            viewMode === 'description' ? 'bg-[#262626]' : 'bg-dark-layer-1 border-l-[1px]'
+          }`}
+          onClick={() => setViewMode('description')}
+        >
           Description
         </div>
         <div
-          className={
-            "bg-dark-layer-1 border-l-[1px] border-[#8b8989] hover:scale-105 hover:text-green-500  px-5 py-[10px] text-sm cursor-pointer"
-          }
+          className={`px-5 py-[10px] text-sm cursor-pointer ${
+            viewMode === 'solution' ? 'bg-[#262626]' : 'bg-dark-layer-1 border-l-[1px]'
+          }`}
+          onClick={() => setViewMode('solution')}
         >
           Solution
         </div>
       </div>
-
+{viewMode === 'description' ? (
       <div className="flex px-0 py-4 h-[calc(100vh-94px)] text-white overflow-y-auto">
         <div className="px-5">
           {/* Problem heading */}
@@ -88,15 +102,38 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({problem}) => {
             </div>
 
             {/* Constraints */}
-            <div className="my-5">
-              <div className="text-white text-sm font-medium">Constraints:</div>
-              <ul className="text-white ml-5 list-disc">
-              <div dangerouslySetInnerHTML={{ __html: problem.constraints }} />
-              </ul>
+              {/* Constraints */}
+              <div className="my-5">
+                <div className="text-white text-sm font-medium">Constraints:</div>
+                <ul className="text-white ml-5 list-disc">
+                  <li className="mt-2">
+                    <code>2 ≤ nums.length ≤ 10</code>
+                  </li>
+
+                  <li className="mt-2">
+                    <code>-10 ≤ nums[i] ≤ 10</code>
+                  </li>
+                  <li className="mt-2">
+                    <code>-10 ≤ target ≤ 10</code>
+                  </li>
+                  <li className="mt-2 text-sm">
+                    <strong>Only one valid answer exists.</strong>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="p-5 text-white">
+          <h2 className="text-xl font-bold mb-4">Solution:</h2>
+          <pre className="bg-dark-layer-1 p-4 rounded-md text-sm">
+            <code>
+              {problem.solution}
+            </code>
+          </pre>
+        </div>
+      )}
     </div>
   );
 };

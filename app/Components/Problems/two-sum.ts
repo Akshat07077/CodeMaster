@@ -78,4 +78,23 @@ export const twoSum: Problem = {
   starterCode: starterCodeTwoSum,
   order: 1,
   starterFunctionName: 'twoSum(',
+  solution:`function twoSum(nums, target) {
+    const map = new Map(); // To store the complement and its index
+
+    for (let i = 0; i < nums.length; i++) {
+        const complement = target - nums[i];
+
+        // If the complement exists in the map, return the indices
+        if (map.has(complement)) {
+            return [map.get(complement), i];
+        }
+
+        // Otherwise, store the current number and its index
+        map.set(nums[i], i);
+    }
+
+    // If no solution found, return an empty array (or handle the case as required)
+    return [];
+}
+`
 };

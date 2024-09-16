@@ -1,10 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Howl } from "howler";
 import PlayNav from "./PlayNav";
 import Split from "react-split";
 import Editor, { Monaco } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Problem } from "../../Problems/types/Problem";
+import { X } from "lucide-react";  // Icon for the close button
 
 type Props = {
   problem: Problem;
@@ -24,6 +25,12 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
     src: '/success.mp3',
     volume: 0.5,
   });
+  const regexPatterns: Record<string, RegExp> = {
+    "two-sum": /nums = \[(.*?)\], target = (\d+)/,
+    "jump-game": /nums = \[(.*?)\]/,
+    // Add more patterns for other problems
+  };
+  
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
@@ -34,10 +41,7 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
   };
 
   const getUserCode = (): string => {
-    if (editorInstance) {
-      return editorInstance.getValue();
-    }
-    return "";
+    return editorInstance ? editorInstance.getValue() : "";
   };
 
   // Function to handle the Submit button click
@@ -52,59 +56,78 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
         setOutput("All test cases passed!");
         setSuccess(true);
         successSound.play(); // Play the success sound
+        setOutputVisible(true);  // Automatically show the output panel
 
-        // Confetti will trigger for 6 seconds and then reset success
+        // Confetti will trigger for 5 seconds and then reset success
         setTimeout(() => {
           setSuccess(false);
         }, 5000);
       } else {
         setOutput("Test cases failed.");
+        setOutputVisible(true);  // Automatically show the output panel
       }
     } catch (err) {
       setError((err as Error).message);
       setOutput(`Error: ${(err as Error).message}`);
+      setOutputVisible(true);  // Automatically show the output panel
     }
   };
 
   const handleRun = () => {
     if (!editorInstance) return;
-
+  
     const userCode = editorInstance.getValue(); // Get the code from the editor
-
+    const pattern = regexPatterns[problem.id]; // Get the regex pattern for the current problem
+  
     if (language === "javascript") {
       try {
         const fn = new Function(`return ${userCode}`)(); // Create a function from user code
         const testCase = problem.examples[activeTest];
-
-        // Extract inputs from the inputText
-        const inputRegex = /nums = \[(.*?)\], target = (\d+)/;
-        const match = testCase.inputText.match(inputRegex);
-
+  
+        // Use the correct pattern to extract inputs
+        const match = testCase.inputText.match(pattern);
+  
         if (match) {
-          const nums = match[1].split(',').map(Number); // Convert to array of numbers
-          const target = Number(match[2]); // Convert target to number
-
-          // Run the user's function with extracted inputs
-          const result = fn(nums, target);
-          const expectedOutput = JSON.parse(testCase.outputText);
-
-          // Compare result with expected output
-          if (JSON.stringify(result) === JSON.stringify(expectedOutput)) {
-            setOutput("Success! Test case passed.");
-          } else {
-            setOutput(`Failed! Expected: ${JSON.stringify(expectedOutput)}, but got: ${JSON.stringify(result)}`);
+          // Process the extracted inputs according to the problem's requirements
+          if (problem.id === "two-sum") {
+            const nums = match[1].split(',').map(Number); // Convert to array of numbers
+            const target = Number(match[2]); // Convert target to number
+            const result = fn(nums, target);
+            const expectedOutput = JSON.parse(testCase.outputText);
+  
+            if (JSON.stringify(result) === JSON.stringify(expectedOutput)) {
+              setOutput("Success! Test case passed.");
+            } else {
+              setOutput(`Failed! Expected: ${JSON.stringify(expectedOutput)}, but got: ${JSON.stringify(result)}`);
+            }
+          } else if (problem.id === "jump-game") {
+            const nums = match[1].split(',').map(Number); 
+            const result = fn(nums);
+            const expectedOutput = testCase.outputText === "true";
+  
+            if (result === expectedOutput) {
+              setOutput("Success! Test case passed.");
+            } else {
+              setOutput(`Failed! Expected: ${expectedOutput}, but got: ${result}`);
+            }
           }
+          // Handle other problems here
+  
+          setOutputVisible(true);  // Automatically show the output panel
         } else {
           setOutput("Error: Could not parse the input text.");
+          setOutputVisible(true);  // Automatically show the output panel
         }
       } catch (error) {
         setOutput(`Error: ${error}`);
+        setOutputVisible(true);  // Automatically show the output panel
       }
     }
   };
+  
 
-  const toggleOutputVisibility = () => {
-    setOutputVisible(!outputVisible);
+  const closeOutput = () => {
+    setOutputVisible(false);  // Hide the output panel
   };
 
   return (
@@ -153,7 +176,7 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
             </div>
           </div>
 
-          <div className="w-full px-5 overflow-auto">
+          <div className="w-full px-5 overflow-auto relative">
             <div className="font-semibold my-1">
               <p className="text-xs font-medium text-white">Test Cases:</p>
               <div className="flex">
@@ -187,17 +210,17 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
               </div>
             </div>
 
-            <button
-              onClick={toggleOutputVisibility}
-              className="mt-2 rounded-xl bg-slate-500 px-2 py-1 text-white"
-            >
-              {outputVisible ? "Hide Output" : "Show Output"}
-            </button>
-
+            {/* Output panel overlay */}
             {outputVisible && (
-              <div className="output-area">
-                <h2 className="font-bold mt-2 text-white">Output:</h2>
-                <pre className="text-white">{output}</pre>
+              <div className="absolute inset-0 bg-[#1E1E1E] rounded-md mt-2 border border-gray-700 text-white p-4">
+                <button
+                  onClick={closeOutput}
+                  className="absolute top-2 right-2 p-5 text-white hover:text-gray-300"
+                >
+                  <X className="w-5 h-8" /> {/* Cross button */}
+                </button>
+                <h2 className="font-bold mt-2">Output:</h2>
+                <pre>{output}</pre>
               </div>
             )}
           </div>
