@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import React from "react";
 import Timer from "../Components/Timer";
+import Link from "next/link";
 
 type Props = {};
 
@@ -22,7 +23,7 @@ const Header = (props: Props) => {
         </div>
         <div className="flex items-center">
           <List />
-          <p className="ml-2">Problems List</p>
+          <p className="ml-2"><Link href={'/problems'}> Problems List </Link></p>
           <ChevronLeft />
           <ChevronRight />
         </div>
