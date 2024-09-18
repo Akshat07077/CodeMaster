@@ -19,7 +19,7 @@ const Header = (props: Props) => {
     <div className="flex justify-between px-4 h-14 text-gray-300 border-b-[1px] border-slate-500 bg-black">
       <div className="flex text-sm gap-2">
         <div>
-          <img src="/logo.png" alt="" className="h-16 w-20" />
+          <Link href={'/'}><img src="/logo.png"  alt="" className="h-16 w-20" /></Link>
         </div>
         <div className="flex items-center">
           <List />

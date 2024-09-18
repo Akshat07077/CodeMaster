@@ -1,6 +1,7 @@
 import React from "react";
 import StudyCard from "./StudyCard";
 import { AxeIcon } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -9,17 +10,19 @@ export default function Home() {
         CodeMaster Codelist
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <Link href={'/playlists/faang'}>
         <StudyCard
           title="Join FAANG CodeList"
           description="Must-do List for Interview Prep"
           bgColor="bg-blue-600"
           source=""
-        />
+        /></Link>
+        <Link href={'/playlists/tcs'}>
         <StudyCard
           title="Ace TCS CodeList"
           description="Ace Coding Interview with 75 Qs"
           bgColor="bg-purple-600"
-        />
+        /></Link>
         <StudyCard
           title="5+ Companies Common Ques"
           description="Crack Main Interview in 50 Qs"
