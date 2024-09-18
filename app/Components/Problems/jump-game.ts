@@ -68,4 +68,5 @@ export const jumpGame: Problem = {
   starterCode: starterCodeJumpGame,
   order: 3,
   starterFunctionName: 'canJump(',
+  solution:''
 };

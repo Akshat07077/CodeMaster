@@ -62,7 +62,7 @@ function Navbar({}: Props) {
         {isSignedIn ? (
             <SignOutButton>
               <Button
-                className="text-[2vh] btn-gradient hover:text-white hover:border-l-2 hover:border-r-2 border-green-500 hover:scale-105"
+                className="text-[2vh] btn-gradient hover:text-white border-l-2 border-r-2 border-green-500 hover:scale-105"
                 variant="ghost"
               >
                 Logout
@@ -71,7 +71,7 @@ function Navbar({}: Props) {
           ) : (
             <Link href="/problems">
               <Button
-                className="text-[2vh] btn-gradient hover:text-white  hover:border-l-2 hover:border-r-2 border-green-500 hover:scale-105"
+                className="text-[2vh] btn-gradient hover:text-white  border-l-2 border-r-2 border-green-500 hover:scale-105"
                 variant="ghost"
               >
                 Login

@@ -36,7 +36,11 @@ const Playground: React.FC<Props> = ({ problem, setSuccess, setSolved, userId })
   const regexPatterns: Record<string, RegExp> = {
     "two-sum": /nums = \[(.*?)\], target = (\d+)/,
     "jump-game": /nums = \[(.*?)\]/,
-    // Add more patterns for other problems
+    "group-anagrams": /strs = \[(.*?)\]/,
+    "reverse-linked-list": /head = \[(.*?)\]/,
+    "valid-parenthesis": /s = "(.*?)"/,
+    "binary-tree-inorder-traversal": /root = \[(.*?)\]/,
+    "longest-substring": /s = "(.*?)"/,
   };
 
   // Function to handle language change
