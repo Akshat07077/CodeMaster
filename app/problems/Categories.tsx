@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowUp, ArrowDown } from "lucide-react";
 
 type Props = {
-  onFilterChange: (category: string) => void; // Accept onFilterChange as a prop
+  // onFilterChange: (category: string) => void; // Accept onFilterChange as a prop
 };
 
 const categories = [
@@ -28,8 +28,8 @@ const categories = [
   "Sliding Window",
   "Trie",
 ];
-
-const Categories: React.FC<Props> = ({ onFilterChange }) => {
+//{ onFilterChange }
+const Categories: React.FC<Props> = () => {
   const [showMore, setShowMore] = useState(false);
 
   const displayedCategories = showMore ? categories : categories.slice(0, 9);
@@ -46,7 +46,7 @@ const Categories: React.FC<Props> = ({ onFilterChange }) => {
             <li
               key={index}
               className="hover:text-green-500 cursor-pointer"
-              onClick={() => onFilterChange(category)} // Call onFilterChange when a category is clicked
+              // onClick={() => onFilterChange(category)} // Call onFilterChange when a category is clicked
             >
               {category}
             </li>

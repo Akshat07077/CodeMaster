@@ -11,7 +11,7 @@ function Home() {
       <div className="bg-[#1c1c1c] h-full flex-col items-start w-[90%]">
         <ComapaniesCards />
         <Categories />
-        <ProblemsList />
+        <ProblemsList categoryFilter={''}/>
       </div>
       <div className="mt-10">
         <div className=" mr-10">
