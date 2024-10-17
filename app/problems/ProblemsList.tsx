@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import { problems } from "../mockProblems/problems";
 import { Circle } from "lucide-react";
 import Link from "next/link";
 
-type Props = {};
+type Props = {
+  categoryFilter: string | null; // Accept the filter from the parent component
+};
 
-const ProblemsList: React.FC<Props> = () => {
+const ProblemsList: React.FC<Props> = ({ categoryFilter }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25;
@@ -16,15 +18,20 @@ const ProblemsList: React.FC<Props> = () => {
 
   if (!isMounted) return null; // Prevent rendering on the server
 
+  // Filter the problems by category if a filter is set
+  const filteredProblems = categoryFilter
+    ? problems.filter(problem => problem.category === categoryFilter)
+    : problems;
+
   // Calculate the start and end indices for the current page
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
 
-  // Slice the problems array for the current page
-  const paginatedProblems = problems.slice(startIndex, endIndex);
+  // Slice the filtered problems array for the current page
+  const paginatedProblems = filteredProblems.slice(startIndex, endIndex);
 
   // Calculate total pages
-  const totalPages = Math.ceil(problems.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredProblems.length / itemsPerPage);
 
   return (
     <div className="max-w-screen-lg mx-auto my-8">

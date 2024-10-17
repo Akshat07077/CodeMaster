@@ -1,17 +1,9 @@
-"use client";
-import {
-  ArrowBigDown,
-  ArrowBigUpDash,
-  ArrowDown,
-  ArrowDownLeftFromSquareIcon,
-  ArrowDownSquare,
-  ArrowUp,
-  MoveDown,
-  TvIcon,
-} from "lucide-react";
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { ArrowUp, ArrowDown } from "lucide-react";
 
-type Props = {};
+type Props = {
+  onFilterChange: (category: string) => void; // Accept onFilterChange as a prop
+};
 
 const categories = [
   "Arrays",
@@ -37,7 +29,7 @@ const categories = [
   "Trie",
 ];
 
-function Categories({}: Props) {
+const Categories: React.FC<Props> = ({ onFilterChange }) => {
   const [showMore, setShowMore] = useState(false);
 
   const displayedCategories = showMore ? categories : categories.slice(0, 9);
@@ -51,7 +43,11 @@ function Categories({}: Props) {
       <div className="flex items-center justify-center ml-24 mt-10">
         <ul className="flex gap-7 w-[95%] flex-wrap items-center justify-center text-slate-300">
           {displayedCategories.map((category, index) => (
-            <li key={index} className="hover:text-green-500">
+            <li
+              key={index}
+              className="hover:text-green-500 cursor-pointer"
+              onClick={() => onFilterChange(category)} // Call onFilterChange when a category is clicked
+            >
               {category}
             </li>
           ))}
@@ -63,16 +59,8 @@ function Categories({}: Props) {
           </button>
         </ul>
       </div>
-      {/* <div className="mt-10">
-        <button
-          className="text-green-500 font-sans  rounded-xl p-2 "
-          onClick={toggleShowMore}
-        >
-          <div className="flex gap-1">{showMore ? "" : "Show More"}</div>
-        </button>
-      </div> */}
     </div>
   );
-}
+};
 
 export default Categories;

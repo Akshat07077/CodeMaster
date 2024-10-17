@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Howl } from "howler";
 import PlayNav from "./PlayNav";
 import Split from "react-split";
@@ -6,13 +6,20 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Problem } from "../../Problems/types/Problem";
 import { X } from "lucide-react";  // Icon for the close button
+import { firestore } from "@/app/firebase/firebase";  // Assuming you've set up Firebase
+import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore"; // Firestore functions
+import { Dispatch, SetStateAction } from 'react';
+
 
 type Props = {
   problem: Problem;
-  setSuccess: React.Dispatch<React.SetStateAction<boolean>>;
+  // setSuccess: React.Dispatch<React.SetStateAction<boolean>>;
+  userId: any;  // Pass the user's unique ID as a prop
+  setSuccess: Dispatch<SetStateAction<boolean>>;
+  setSolved: Dispatch<SetStateAction<boolean>>;  // Ensure setSolved is included here
 };
 
-const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
+const Playground: React.FC<Props> = ({ problem, setSuccess, setSolved, userId }) => {
   const [editorInstance, setEditorInstance] = useState<any>(null); // Store the editor instance
   const [language, setLanguage] = useState<string>("javascript");
   const [output, setOutput] = useState<string>("");
@@ -25,27 +32,101 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
     src: '/success.mp3',
     volume: 0.5,
   });
+
   const regexPatterns: Record<string, RegExp> = {
     "two-sum": /nums = \[(.*?)\], target = (\d+)/,
     "jump-game": /nums = \[(.*?)\]/,
-    // Add more patterns for other problems
+    "group-anagrams": /strs = \[(.*?)\]/,
+    "reverse-linked-list": /head = \[(.*?)\]/,
+    "valid-parenthesis": /s = "(.*?)"/,
+    "binary-tree-inorder-traversal": /root = \[(.*?)\]/,
+    "longest-substring": /s = "(.*?)"/,
   };
-  
 
+  // Function to handle language change
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
   };
 
+  // Save the editor instance on mount
   const handleEditorDidMount = (editor: any, monaco: Monaco) => {
+    const storedCode = localStorage.getItem(problem.id); // Retrieve saved code for the specific problem
+    if (storedCode) {
+      editor.setValue(storedCode);  // Set the editor value with the stored code
+    }
     setEditorInstance(editor);
   };
-
+  const handleEditorChange = (value: string | undefined) => {
+    if (value) {
+      localStorage.setItem(problem.id, value); // Store the code in localStorage
+    }
+  };
+  // Retrieve the user's code from the editor
   const getUserCode = (): string => {
     return editorInstance ? editorInstance.getValue() : "";
   };
+  useEffect(() => {
+    const storedCode = localStorage.getItem(problem.id); // Retrieve saved code for the specific problem
+    if (storedCode) {
+      setEditorInstance(storedCode);
+    }
+  }, [problem.id]);
 
-  // Function to handle the Submit button click
-  const handleSubmit = () => {
+  useEffect(() => {
+    // Fetch the user's solved problems from Firebase when the component mounts
+    const fetchSolvedStatus = async () => {
+      try {
+        const userRef = doc(firestore, "users", userId);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+          const solvedProblems = userDoc.data().solvedProblems || [];
+          
+          // Check if the current problem is solved
+          if (solvedProblems.includes(problem.id)) {
+            setSolved(true);  // Update the local state to reflect solved status
+          } else {
+            setSolved(false); // Ensure it's false if not solved
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching solved problems:", err);
+      }
+    };
+
+    fetchSolvedStatus();
+  }, [userId, problem.id, setSolved]);
+
+  // Function to update Firestore with solved questions
+  const updateDatabaseSolvedQues = async (problemId: string) => {
+    try {
+      // console.log("Updating Firestore with problemId:", problemId);
+      // console.log("userId:", userId);
+      const userRef = doc(firestore, "users", userId);  // Ensure userId is valid here
+      const userDoc = await getDoc(userRef);
+      // console.log("User document retrieved:", userDoc.data());
+      
+
+      if (userDoc.exists()) {
+        // Update the existing solved problems array
+        await updateDoc(userRef, {
+          solvedProblems: [...userDoc.data().solvedProblems, problemId],
+          lastSolvedAt: new Date().toISOString(),  // Optional: Add timestamp of last solved problem
+        });
+      } else {
+        // If no user data exists, create a new record
+        await setDoc(userRef, {
+          solvedProblems: [problemId],
+          lastSolvedAt: new Date().toISOString(),
+        });
+      }
+    } catch (err) {
+      console.error("Error updating the solved questions in the database:", err);
+    }
+  };
+
+  // Handle the submission of the code
+  const handleSubmit = async () => {
     try {
       setError(null);
       const code = getUserCode(); // Get the code from the editor
@@ -55,8 +136,12 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
       if (result) {
         setOutput("All test cases passed!");
         setSuccess(true);
+        setSolved(true)
         successSound.play(); // Play the success sound
         setOutputVisible(true);  // Automatically show the output panel
+
+        // Update Firestore with the solved problem
+        await updateDatabaseSolvedQues(problem.id);
 
         // Confetti will trigger for 5 seconds and then reset success
         setTimeout(() => {
@@ -73,6 +158,7 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
     }
   };
 
+  // Handle the Run button click, specifically for JavaScript
   const handleRun = () => {
     if (!editorInstance) return;
   
@@ -88,7 +174,7 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
         const match = testCase.inputText.match(pattern);
   
         if (match) {
-          // Process the extracted inputs according to the problem's requirements
+          // Process inputs based on the current problem ID
           if (problem.id === "two-sum") {
             const nums = match[1].split(',').map(Number); // Convert to array of numbers
             const target = Number(match[2]); // Convert target to number
@@ -124,8 +210,8 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
       }
     }
   };
-  
 
+  // Close the output panel
   const closeOutput = () => {
     setOutputVisible(false);  // Hide the output panel
   };
@@ -140,6 +226,7 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
             id="language-select"
             value={language}
             onChange={handleLanguageChange}
+            
             className="p-2 w-24 bg-[#1C1C1C] text-white text-[1.4vh] rounded-xl"
           >
             <option value="javascript">JavaScript</option>
@@ -159,6 +246,7 @@ const Playground: React.FC<Props> = ({ problem, setSuccess }) => {
               language={language}
               theme="vs-dark"
               onMount={handleEditorDidMount}
+              onChange={handleEditorChange}
             />
             <div className="overflow-hidden gap-5 flex-row-reverse flex mr-10">
               <Button
