@@ -20,6 +20,7 @@ const starterCodeValidParenthesesJS = `function validParentheses(s) {
 };`;
 
 export const validParentheses: Problem = {
+	solution:'',
 	difficulty:'Medium',
 	id: "valid-parentheses",
 	title: "4. Valid Parentheses",
