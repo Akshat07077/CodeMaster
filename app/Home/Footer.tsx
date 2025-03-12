@@ -90,7 +90,7 @@ function Footer({}: Props) {
         </div>
       </div>
       <p className="text-center text-white text-sm mb-12">
-        All rights reserved 2024. Made by Akshat Sharma
+        All rights reserved 2024. Made by DesignsVerse
       </p>
     </div>
   );
